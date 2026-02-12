@@ -11,7 +11,7 @@ let { EMAIL } = process.env;
 async function emailSendingService(sentInfo) {
     try {
         const { email, emailString , userId } = sentInfo;
-        let emailLink = `http://localhost:3000/verify-email?id=${userId}&emailString=${emailString}`;
+        let emailLink = `http://localhost:3000/verify-email?userId=${userId}&tokenString=${emailString}`;
         
         let mailOptions = {
             from: EMAIL,
@@ -19,6 +19,7 @@ async function emailSendingService(sentInfo) {
             subject: "Verify your email",
             html: `<p>Click on the link to verify your email: <a href="${emailLink}">Verify Email</a></p>`
         };
+        console.log("Sent email link" , emailLink);
 
         let info = await emailTransporter.sendMail(mailOptions);
 

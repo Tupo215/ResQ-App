@@ -1,8 +1,11 @@
-const { SignUpModelHandler } = require("../model/signUpModel");
+const { AuthModelHandler } = require("../model/AuthModel");
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 const path = require('path');
-const crypto = require('crypto');
+
+const randomStringGenerator = require('../utils/randomStringGenerator');
+const cryptoHasher = require('../utils/cryptoHasher');
+const tokenModel = require('../model/tokenModel');
 
 dotenv.config(
     {
@@ -10,73 +13,146 @@ dotenv.config(
     }
 )
 
-let signUpModelHandler = new SignUpModelHandler();
+
+let tokenModelHandler = new tokenModel();
 let { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } = process.env;
 
 
-function accessTokenGenerator(userId) {
-    // access token expires every 1 hr
-    let oneHr = 3600; // 1 hr = 3600 sec;
-    let current = Math.floor(Date.now() / 1000); // to convert 
-    let accessToken = jwt.sign({
-        userId,
-        exp: current + oneHr
-    }, ACCESS_TOKEN_SECRET)
 
-
-    return {
-        success: true,
-        accessToken
-    }
-}
-
-
-async function refreshTokenGenerator(sentInfo) {
-    try {
-        // 2 types of obj - one sent to client one sent to db
-        let { randomString, userId } = sentInfo;
-        let twenty_days_from_now = 20 * 24 * 60 * 60;
-        let exp = Date.now() / 1000 + twenty_days_from_now;
-        let objSentToClient = {
-            randomString,
-            exp
-        }
-
-        let randomStringHashed = crypto.createHash('sha-256').update(randomString).digest('hex');
-        let sentToDataBase = {
+class TokenGenerationServiceHandler {
+    accessTokenGenerator(userId) {
+        // access token expires every 1 hr
+        let oneHr = 3600; // 1 hr = 3600 sec;
+        let current = Math.floor(Date.now() / 1000); // to convert 
+        let accessToken = jwt.sign({
             userId,
-            randomStringHashed
+            exp: current + oneHr
+        }, ACCESS_TOKEN_SECRET)
+
+
+        return {
+            success: true,
+            accessToken
         }
+    }
 
-        let res = await signUpModelHandler.putRefreshTokenInfo(sentToDataBase);
 
-        if (!res.success){
+    async refreshTokenGenerator(userId) {
+        try {
+            // we need 2 obj - one to send to client and one to save in database
+            let randomString = randomStringGenerator();
+            let randomStringHashed = cryptoHasher(randomString);
+            let twenty_days_from_now = 20 * 24 * 60 * 60; // 20 days in seconds
+            let exp = Date.now() / 1000 + twenty_days_from_now;
+
+            let objSentToClient = {
+                randomString,
+                exp
+            }
+
+            let sentToDataBase = {
+                userId,
+                randomStringHashed
+            }
+
+            let res = await tokenModelHandler.putRefreshTokenInfo(sentToDataBase);
+
+            if (!res.success) {
+                return {
+                    success: false
+                }
+            }
+
+            let refreshToken = jwt.sign(objSentToClient, REFRESH_TOKEN_SECRET);
+
             return {
-                success : false
+                success: true,
+                refreshToken
+            }
+
+        } catch (err) {
+            console.log("Error while refreshTokenGenerator ", err.message)
+            return {
+                success: false
+            }
+        }
+    }
+
+
+    async generateAccessFromRefresh(randomString) {
+        try {
+            // sentInfo = decoded refresh token from client
+            let randomStringHashed = cryptoHasher(randomString);
+
+            let res = await tokenModelHandler.findRefreshToken({ randomStringHashed }); // also invalidates ref
+
+            if (!res.success) {
+                return {
+                    success: false
+                    // means the string has been tampered or the refresh token has been invalidated by the user
+                }
+            }
+
+            let { userId } = res;
+
+            let accessToken = accessTokenGenerator(userId);
+            let ref = await refreshTokenGenerator(userId)
+            // bc the old one is invalidated as soon as it is used, we need to generate a new refresh token and send it to the client
+
+            if (!ref.success) {
+                return {
+                    success: false
+                }
+            }
+
+            return {
+                success: true,
+                data: {
+                    accessToken: accessToken.accessToken,
+                    refreshToken: ref.refreshToken
+                }
+            }
+
+        } catch (err) {
+            console.log("Error while generateAccessFromRefresh ", err.message)
+            return {
+                success: false
             }
         }
 
-        let refreshToken = jwt.sign(objSentToClient , REFRESH_TOKEN_SECRET );
+    }
 
-        return {
-            success : true,
-            refreshToken
-        }
+    async invalidateRefreshToken(sentInfo) {
+        try {
+            let { randomString } = sentInfo;
+            let randomStringHashed = cryptoHasher(randomString);
 
-    } catch (err) {
-        console.log("Error while refreshTokenGenerator ", err.message)
-        return {
-            success: false
+            let res = await tokenModelHandler.invalidateRefreshToken({ randomStringHashed });
+
+            if (!res.success) {
+                return {
+                    success: false
+                }
+            }
+
+            return {
+                success: true
+            }
+        } catch (err) {
+            console.log("Error while invalidateRefreshToken ", err.message);
+            return {
+                success: false
+            }
         }
     }
 }
 
 
-async function generateAccessFromRefresh(params) {
-    
-}
+
+module.exports = TokenGenerationServiceHandler;
 
 
-async function invalidateAccess(sentInfo) {
-    
-}
+
+
+
+

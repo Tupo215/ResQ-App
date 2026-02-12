@@ -3,11 +3,11 @@ const Joi = require('joi');
 // is there uuid type in Joi
 
 // create schemas that validate user input from the mobile
-let signUpInputValidator = Joi.object(
+let signUpInputSchema = Joi.object(
     {
         fullname: Joi.string().required(),
-        primaryValidator: Joi.string().trim().validate('phone', 'email').required(),
-        email: Joi.email().trim().when('primaryValidator', {
+        primaryValidator: Joi.string().trim().valid('phone', 'email').required(),
+        email: Joi.string().email().trim().when('primaryValidator', {
             is: 'email',
             then: Joi.required(),
             otherwise: Joi.optional().empty(null)
@@ -17,20 +17,19 @@ let signUpInputValidator = Joi.object(
             then: Joi.required(),
             otherwise: Joi.optional().empty(null)
         }),
-        otp: Joi.string().trim().required(),
         password: Joi.string().trim().required(),
 
-        deviceIdentifier: Joi.uuid().trim()
+        deviceIdentifier: Joi.string().uuid({ version: 'uuidv4' }).trim().required()
     }, {
     abortEarly: false
 }
 );
 
 
-let otpInputValidator = Joi.object(
+let otpInputSchema = Joi.object(
     {
         // we send in the pendingUserId and otpHashed
-        userId: Joi.uuid().trim().required(),
+        userId: Joi.string().uuid({ version: 'uuidv4' }).trim().required(),
         otp: Joi.string().trim().required()
     }, {
     abortEarly: false
@@ -38,19 +37,72 @@ let otpInputValidator = Joi.object(
 )
 
 
-let resendOtpValidator = Joi.object(
+let emailInputSchema = Joi.object(
+    {
+        userId: Joi.string().uuid({ version: 'uuidv4' }).trim().required(),
+        tokenString: Joi.string().trim().required()
+        // both are from req.params
+    }
+    , {
+        abortEarly: false
+    }
+)
+
+
+let resendOtpSchema = Joi.object(
     {
         // we send in the pendingUserId and otpHashed
-        UserId: Joi.uuid().trim().required()
+        userId: Joi.string().uuid({ version: 'uuidv4' }).trim().required()
     }, {
     abortEarly: false
 }
 )
 
+let resendEmailSchema = Joi.object(
+    {
+        userId: Joi.string().uuid({ version: 'uuidv4' }).trim().required()
+    },
+    { abortEarly: false }
+)
+
+let logInSchema = Joi.object(
+    {
+        logInVia : Joi.string().trim().valid('phone', 'email').required(),
+        email: Joi.string().email().trim().when('logInVia', {
+            is: 'email',
+            then : Joi.required(),
+            otherwise : Joi.optional().empty(null)
+        }),
+        phone: Joi.string().trim().when('logInVia', {
+            is: 'phone',
+            then : Joi.required(),      
+            otherwise : Joi.optional().empty(null)
+        }),
+        password: Joi.string().trim().required(),
+        deviceIdentifier: Joi.string().uuid({ version: 'uuidv4' }).trim().required()
+    },
+    { abortEarly: false }
+)   
+
+
+let logOutSchema = Joi.object(
+    {
+        randomString : Joi.string().trim().required(),
+        exp : Joi.date().timestamp().required(),
+        iat: Joi.number() // optional
+    },
+    { abortEarly: false }
+)
+
+
 
 
 module.exports = {
-    signUpInputValidator,
-    otpInputValidator,
-    resendOtpValidator
+    signUpInputSchema,
+    otpInputSchema,
+    resendOtpSchema,
+    logOutSchema,
+    emailInputSchema,
+    resendEmailSchema,
+    logInSchema
 }

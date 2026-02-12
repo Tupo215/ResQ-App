@@ -1,11 +1,11 @@
-const pool = require('../config/pgConnection')
+const pool = require('../config/pgConnection');
 
-class SignUpModelHandler {
+class AuthModelHandler {
     async signUp(sentInfo) {
         try {
             const { deviceIdentifier, fullname, email, phone, otpHashed, passwordHashed, emailStringHashed } = sentInfo;
 
-            const query = `INSERT INTO pending_users (device_identifier, fullname, email, phone_number, otp_hashed, password_hashed , email_verification_token_hashed) VALUES ($1, $2, $3, $4, $5, $6 , $7) RETURNING id`;
+            const query = `INSERT INTO pending_users (deviceIdentifier, fullname, email, phone_number, otp_hashed, password_hashed , email_verification_token_hashed) VALUES ($1, $2, $3, $4, $5, $6 , $7) RETURNING id`;
             const values = [deviceIdentifier, fullname, email, phone, otpHashed, passwordHashed, emailStringHashed];
 
             let result = await pool.query(query, values);
@@ -21,7 +21,7 @@ class SignUpModelHandler {
             }
 
         } catch (err) {
-            console.log("Error in signUpModelHandler.signUp  ", err.message)
+            console.log("Error in AuthModelHandler.signUp  ", err.message)
             return {
                 success: false
             }
@@ -38,14 +38,14 @@ class SignUpModelHandler {
             if (result.rows.length > 0) {
                 return {
                     success: true,
-                    otpHashed : result.rows[0].otp_hashed
+                    otpHashed: result.rows[0].otp_hashed
                 }
             }
             return {
                 success: false
             }
         } catch (err) {
-            console.log("Error in signUpModelHandler.otpVerification  ", err.message)
+            console.log("Error in AuthModelHandler.otpVerification  ", err.message)
             return {
                 success: false
             }
@@ -57,24 +57,25 @@ class SignUpModelHandler {
         try {
             let { userId } = sentInfo;
 
+            
             let query = `SELECT email_verification_token_hashed FROM pending_users WHERE id = $1`;
             let values = [userId];
 
             let res = await pool.query(query, values);
 
-            if (res.rowCount === 0){
+            if (res.rowCount === 0) {
                 return {
-                    success : false
+                    success: false
                 }
             }
 
             return {
-                success : true,
-                emailVerificationToken : res.rows[0].email_verification_token_hashed
+                success: true,
+                emailVerificationToken: res.rows[0].email_verification_token_hashed
             }
 
         } catch (err) {
-            console.log("Error in signUpModelHandler.emailVerification ", err.message)
+            console.log("Error in AuthModelHandler.emailVerification ", err.message)
             return {
                 success: false
             }
@@ -101,7 +102,7 @@ class SignUpModelHandler {
 
 
         } catch (err) {
-            console.log("Error in signUpModelHandler.putUserIntoVerified ", err.message)
+            console.log("Error in AuthModelHandler.putUserIntoVerified ", err.message)
             return {
                 success: false
             }
@@ -126,7 +127,7 @@ class SignUpModelHandler {
                 success: false
             }
         } catch (err) {
-            console.log("Error in signUpModelHandler.resendOtp  ", err.message)
+            console.log("Error in AuthModelHandler.resendOtp  ", err.message)
             return {
                 success: false
             }
@@ -154,7 +155,7 @@ class SignUpModelHandler {
             }
 
         } catch (err) {
-            console.log("Error in signUpModelHandler.resendEmailVerification ", err.message)
+            console.log("Error in AuthModelHandler.resendEmailVerification ", err.message)
             return {
                 success: false
             }
@@ -178,40 +179,62 @@ class SignUpModelHandler {
                 success: false
             }
         } catch (err) {
-            console.log("Error in signUpModelHandler.deletePendingUser  ", err.message)
+            console.log("Error in AuthModelHandler.deletePendingUser  ", err.message)
             return {
                 success: false
             }
         }
     }
 
-    async putRefreshTokenInfo(sentInfo) {
+    async logInPhone(sentInfo) {
         try {
-            let { userId, randomStringHashed } = sentInfo;
-
-            let query = `INSERT INTO refresh_token(user_id , random_string_hashed) VALUES ($1 , $2) RETURNING id`;
-            let values = [userId, randomStringHashed];
+            let { phone , deviceIdentifier} = sentInfo;
+            let query = `UPDATE verified_users SET deviceIdentifier = $2 WHERE phone_number = $1 RETURNING id, password_hashed;`;
+            let values = [phone , deviceIdentifier];
 
             let result = await pool.query(query, values);
 
             if (result.rows.length > 0) {
                 return {
-                    success: true
+                    success: true,
+                    data: result.rows[0]
                 }
             }
             return {
                 success: false
             }
-
         } catch (err) {
-            console.log("Error in signUpModelHandler.deletePendingUser  ", err.message)
+            console.log("Error in AuthModelHandler.logInPhone  ", err.message)
             return {
                 success: false
             }
         }
     }
+
+    async logInEmail(sentInfo) {
+        try {
+            let { email, deviceIdentifier } = sentInfo;
+            let query = `UPDATE verified_users SET deviceIdentifier = $2 WHERE email = $1 RETURNING id, password_hashed;`;
+            let values = [email, deviceIdentifier];
+            let result = await pool.query(query, values);
+
+            if (result.rows.length > 0) {
+                return {
+                    success: true,
+                    data: result.rows[0]
+                }
+            }
+            return {
+                success: false
+            }
+        } catch (err) {
+            console.log("Error in AuthModelHandler.logInEmail  ", err.message)
+            return {
+                success: false
+            }
+        }
+    }
+
 }
 
-
-
-module.exports = { SignUpModelHandler };
+module.exports = { AuthModelHandler }
