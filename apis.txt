@@ -1,0 +1,3 @@
+When u try to resend email or Otp - get request with req parameters to be userId
+
+u need to make the http://localhost:3000/verify-email?id=${userId}&emailString=${emailString}` get handler end point

@@ -1,0 +1,26 @@
+2 postgres users
+one - schema ownership
+one - with database ownership
+
+
+2 roles 
+Admin - will be responsible to using and updating the schema ( function , table creation and updation) and connecting to the database
+User - will only have database privilleges and also schema usage privilleges and can call existing functions that were created by admin
+Table privilleges will be given for both roles
+
+Sign up with phone num and sms otp
+Sign up with email and otp will be emailed
+Log in via biometrics / phone / email + password
+
+Emergency log in parts - not get
+when emergency is reported they can just send locations then can be registered as emergency
+
+
+Tomorrow 
+I get to learn how to send emails containing links and work with them
+How to send sms messages
+testing the end points
+what will happen when refresh token gets expired
+
+
+huh ? Date.now() / 1000 in token generation
