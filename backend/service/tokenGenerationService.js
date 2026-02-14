@@ -20,12 +20,13 @@ let { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } = process.env;
 
 
 class TokenGenerationServiceHandler {
-    accessTokenGenerator(userId) {
+    accessTokenGenerator({ userId, role }) {
         // access token expires every 1 hr
         let oneHr = 3600; // 1 hr = 3600 sec;
         let current = Math.floor(Date.now() / 1000); // to convert 
         let accessToken = jwt.sign({
             userId,
+            role,
             exp: current + oneHr
         }, ACCESS_TOKEN_SECRET)
 
@@ -37,7 +38,7 @@ class TokenGenerationServiceHandler {
     }
 
 
-    async refreshTokenGenerator(userId) {
+    async refreshTokenGenerator({ userId , role }) {
         try {
             // we need 2 obj - one to send to client and one to save in database
             let randomString = randomStringGenerator();
@@ -52,8 +53,11 @@ class TokenGenerationServiceHandler {
 
             let sentToDataBase = {
                 userId,
-                randomStringHashed
+                randomStringHashed,
+                role
             }
+
+            console.log("sent to the database " , sentToDataBase )
 
             let res = await tokenModelHandler.putRefreshTokenInfo(sentToDataBase);
 
@@ -93,10 +97,11 @@ class TokenGenerationServiceHandler {
                 }
             }
 
-            let { userId } = res;
+            let { userId , role } = res.data;
 
-            let accessToken = accessTokenGenerator(userId);
-            let ref = await refreshTokenGenerator(userId)
+            // bc this things are implicitly called and they are methods of the obj calling generateAccessFromRefresh
+            let accessToken = this.accessTokenGenerator({ userId , role });
+            let ref = await this.refreshTokenGenerator({ userId , role })
             // bc the old one is invalidated as soon as it is used, we need to generate a new refresh token and send it to the client
 
             if (!ref.success) {

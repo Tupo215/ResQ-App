@@ -3,6 +3,14 @@ const tokenRouter = require('./routes/tokenRoute');
 const express = require('express');
 const cors = require('cors');
 const app = express();
+const dotenv = require('dotenv');
+const path = require('path');
+
+dotenv.config({
+    path : path.resolve( __dirname , '../.env')
+})
+
+const { PORT } = process.env;
 
 
 app.use(express.json());
@@ -13,6 +21,6 @@ app.use('/auth', authRouter);
 app.use('/token', tokenRouter);
 
 
-app.listen(3000, () => {
-    console.log("Server is running on port 3000");
+app.listen(PORT , () => {
+    console.log(`Server is running on port ${PORT}`);
 });

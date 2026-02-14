@@ -6,6 +6,6 @@ const generateAccessFromRef = require('../controller/TokenController');
 
 const tokenRouter = express.Router();
 
-tokenRouter.post('/generate-access-token' , refreshValidator , generateAccessFromRef);
+tokenRouter.post('/generate-access-token' , refreshValidator , generateAccessFromRef); // checked
 
 module.exports = tokenRouter;

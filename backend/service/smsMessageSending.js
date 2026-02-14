@@ -9,6 +9,7 @@ const { TWILIO_PHONE_NUMBER } = process.env;
 async function smsMessageSending(sentInfo) {
     try {
         const { phone, otp } = sentInfo;
+        console.log("Sending SMS to ", phone, " with OTP ", otp);
 
         let message = await client.messages.create({
             body: `Your OTP for ResQMissionAfrica is ${otp}`,

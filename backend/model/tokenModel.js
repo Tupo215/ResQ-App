@@ -3,10 +3,10 @@ const pool = require('../config/pgConnection');
 class TokenModelHandler {
     async putRefreshTokenInfo(sentInfo) {
         try {
-            let { userId, randomStringHashed } = sentInfo;
+            let { userId, randomStringHashed , role } = sentInfo;
 
-            let query = `INSERT INTO refresh_token(user_id , random_string_hashed) VALUES ($1 , $2) RETURNING id`;
-            let values = [userId, randomStringHashed];
+            let query = `INSERT INTO refresh_token(user_id , random_string_hashed , userRole) VALUES ($1 , $2 , $3) RETURNING id`;
+            let values = [userId, randomStringHashed, role];
 
             let result = await pool.query(query, values);
 
@@ -31,7 +31,7 @@ class TokenModelHandler {
         try {
             let { randomStringHashed } = sentInfo;
 
-            let query = `UPDATE refresh_token SET is_valid = false WHERE random_string_hashed = $1 RETURNING user_id;`;
+            let query = `UPDATE refresh_token SET is_valid = false WHERE random_string_hashed = $1 RETURNING user_id , userRole`;
             // to make it more secure we will invalidate the refresh token as soon as it is used to generate a new access token, so that even if the refresh token is stolen, it cannot be used to generate new access tokens
             let values = [randomStringHashed];
 
@@ -43,11 +43,14 @@ class TokenModelHandler {
                 }
             }
 
-            let { user_id } = result.rows[0];
+            let { user_id , userrole } = result.rows[0];
 
             return {
                 success: true,
-                userId: user_id
+                data : {
+                   userId : user_id,
+                   role : userrole
+                }
             }
 
         } catch (err) {

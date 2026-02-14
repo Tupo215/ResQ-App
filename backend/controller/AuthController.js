@@ -5,7 +5,7 @@ let signUpServiceHandler = new SignUpServiceHandler();
 class AuthController {
     async signUp(req, res) {
         try {
-            let { fullname, email, phone, password, deviceIdentifier } = req.validatedBody;
+            let { fullname, email, phone, password, deviceIdentifier , role} = req.validatedBody;
 
             let result = await signUpServiceHandler.signUp({
                 fullname,
@@ -13,11 +13,12 @@ class AuthController {
                 phone,
                 password,
                 deviceIdentifier,
+                role
             });
             if (result.success) {
                 return res.status(200).json(result.data);
             } else {
-                return res.status(400).json({ message: "User sign up failed" });
+                return res.status(400).json(result);
             }
         } catch (err) {
             console.log("Error while AuthController.signUp ", err.message);
@@ -33,7 +34,7 @@ class AuthController {
             if (result.success) {
                 return res.status(200).json(result.data);
             } else {
-                return res.status(400).json({ message: "OTP validation failed" });
+                return res.status(400).json(result);
             }
         } catch (err) {
             console.log("Error while AuthController.validateOtp ", err.message);
@@ -48,9 +49,10 @@ class AuthController {
             let result = await signUpServiceHandler.validateEmailLink({ userId, tokenString });
 
             if (result.success) {
-                return res.status(200).json(result.data);
+                // redirect users to their app
+                return res.status(302).json(result.data);
             } else {
-                return res.status(400).json({ message: "Email verification failed" });
+                return res.status(400).json(result);
             }
         } catch (err) {
             console.log("Error while AuthController.validateEmail ", err.message);
@@ -66,7 +68,7 @@ class AuthController {
             if (result.success) {
                 return res.status(200).json({ message: "OTP resent successfully" });
             } else {
-                return res.status(400).json({ message: "OTP resend failed" });
+                return res.status(400).json(result);
             }
         } catch (err) {
             console.log("Error while AuthController.resendOtp ", err.message);
@@ -83,7 +85,7 @@ class AuthController {
             if (result.success) {
                 return res.status(200).json({ message: "Email verification link resent successfully" });
             } else {
-                return res.status(400).json({ message: "Email verification link resend failed" });
+                return res.status(400).json(result);
             }
         } catch (err) {
             console.log("Error while AuthController.resendEmailVerificationLink ", err.message);
@@ -92,20 +94,20 @@ class AuthController {
     }
 
     async logIn(req, res) {
-        let { logInVia, phone, email, password, deviceIdentifier } = req.validatedBody;
+        let { logInVia, phone, email, password } = req.validatedBody;
         try {
             let result;
             if (logInVia === "email") {
-                result = await signUpServiceHandler.logInWithEmail({ email, password, deviceIdentifier });
+                result = await signUpServiceHandler.logInWithEmail({ email, password });
             } else if (logInVia === "phone") {
-                result = await signUpServiceHandler.logInWithPhone({ phone, password, deviceIdentifier });
+                result = await signUpServiceHandler.logInWithPhone({ phone, password });
             } else {
                 return res.status(400).json({ message: "Invalid log in method" });
             }
             if (result.success) {
                 return res.status(200).json(result.data);
             } else {
-                return res.status(400).json({ message: "Log in failed" });
+                return res.status(400).json(result);
             }
         } catch (err) {
             console.log("Error while AuthController.logIn ", err.message);
@@ -121,7 +123,7 @@ class AuthController {
             if (result.success) {
                 return res.status(200).json({ message: "Logged out successfully" });
             } else {
-                return res.status(400).json({ message: "Log out failed" });
+                return res.status(400).json(result);
             }
         } catch (err) {
             console.log("Error while AuthController.logOut ", err.message);

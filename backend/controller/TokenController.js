@@ -4,7 +4,7 @@ let tokenGenHandler = new TokenGenerationServiceHandler();
 
 async function generateAccessFromRef(req, res) {
     try {
-        let { randomString } = req.decodedRefresh;
+        let { randomString } = req.body;
 
         let result = await tokenGenHandler.generateAccessFromRefresh(randomString);
 

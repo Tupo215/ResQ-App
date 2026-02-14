@@ -11,7 +11,7 @@ authRouter.post('/sign-up', signUpInputValidator, authController.signUp); // che
 authRouter.post('/verify-otp', otpInputValidator, authController.validateOtp);
 authRouter.get('/verify-email', emailInputValidator, authController.validateEmail); // checked
 authRouter.get('/resend-otp', resendOtpValidator, authController.resendOtp);
-authRouter.get('/resend-email-verification-link', resendEmailValidator, authController.resendEmailVerificationLink);
+authRouter.get('/resend-email-verification-link', resendEmailValidator, authController.resendEmailVerificationLink); // test it
 authRouter.post('/log-in' , logInValidator , authController.logIn); // checked
 authRouter.post('/log-out' , refreshValidator  , logOutValidator , authController.logOut); // checked
 

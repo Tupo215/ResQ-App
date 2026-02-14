@@ -19,7 +19,8 @@ let signUpInputSchema = Joi.object(
         }),
         password: Joi.string().trim().required(),
 
-        deviceIdentifier: Joi.string().uuid({ version: 'uuidv4' }).trim().required()
+        deviceIdentifier: Joi.string().uuid({ version: 'uuidv4' }).trim().required(),
+        role : Joi.string().trim().valid('user', 'ambulance', 'hospital').required()
     }, {
     abortEarly: false
 }
@@ -78,8 +79,7 @@ let logInSchema = Joi.object(
             then : Joi.required(),      
             otherwise : Joi.optional().empty(null)
         }),
-        password: Joi.string().trim().required(),
-        deviceIdentifier: Joi.string().uuid({ version: 'uuidv4' }).trim().required()
+        password: Joi.string().trim().required()
     },
     { abortEarly: false }
 )   

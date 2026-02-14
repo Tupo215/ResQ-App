@@ -23,9 +23,10 @@ class AuthService {
             // send the messages or email including links
 
 
-            let { fullname, email, phone, password, deviceIdentifier } = sentInfo;
+            let { fullname, email, phone, password, deviceIdentifier, role } = sentInfo;
             let otpHashed, otp, emailString, emailStringHashed;
             let passwordHashed = await bcryptHasher(password);
+
 
 
             if (phone) {
@@ -39,6 +40,29 @@ class AuthService {
             }
 
 
+            // make sure u have deleted emergency report user first
+            // delete ghost users
+            let resultDeleteEmergencyOnly = await authModelHandler.deleteEmergencyOnly(deviceIdentifier);
+
+            if (!resultDeleteEmergencyOnly.success) {
+                console.log("Problem in deleting emergency only user with device identifier ", deviceIdentifier);
+                return {
+                    success: false,
+                    reason: "Problem while deleting emergency_only role from AuthService.signUp  "
+                }
+            }
+
+            let emailPhoneUniqueCheckResult = await authModelHandler.emailPhoneUniqueCheck({ email, phone });
+
+            if (!emailPhoneUniqueCheckResult.success) {
+                // means not unique
+                console.log("Email or phone number already in use  for user email ", email, " ", phone);
+                return {
+                    success: false,
+                    reason: "Email or phone number already in use"
+                }
+            }
+
             let result = await authModelHandler.signUp(
                 {
                     fullname,
@@ -47,14 +71,16 @@ class AuthService {
                     otpHashed,
                     passwordHashed,
                     emailStringHashed,
-                    deviceIdentifier
+                    deviceIdentifier,
+                    role
                 }
             )
 
             if (!result.success) {
                 console.log("Saving problem in pending user")
                 return {
-                    success: false
+                    success: false,
+                    reason : "Saving problem in pending user"
                 }
             }
 
@@ -72,14 +98,20 @@ class AuthService {
 
                 if (!res.success) {
                     console.log("Email sending failed");
-                    return { success: false };
+                    return { 
+                        success: false ,
+                        reason : "Error while sending email"
+                    };
                 }
             } else if (phone) {
                 // send verification with sms
                 let res = await smsMessageSending({ phone, otp })
                 if (!res.success) {
                     console.log("SMS sending failed");
-                    return { success: false };
+                    return { 
+                        success: false ,
+                        reason : "Error while sending otp"
+                    };
                 }
             }
 
@@ -108,28 +140,32 @@ class AuthService {
 
             if (!userFromDb.success) {
                 return {
-                    success: false
+                    success: false,
+                    reason: "Error while verifying otp"
                 }
             }
 
-            let { otpHashed } = userFromDb;
+            let { otpHashed, role } = userFromDb.data;
 
 
 
             if (otpHashedUser.trim() !== otpHashed.trim()) {
                 return {
-                    success: false
+                    success: false,
+                    reason: "Verification failed bc of tampered otp"
                 }
             }
 
 
+
             // then generate access and refresh tokens
-            let { accessToken } = tokenGenerationServiceHandler.accessTokenGenerator(userId);
-            let refreshTokenResult = await tokenGenerationServiceHandler.refreshTokenGenerator(userId);
+            let { accessToken } = tokenGenerationServiceHandler.accessTokenGenerator({ userId, role });
+            let refreshTokenResult = await tokenGenerationServiceHandler.refreshTokenGenerator({ userId, role });
 
             if (!refreshTokenResult.success) {
                 return {
-                    success: false
+                    success: false,
+                    reason: "Error while generating refresh token"
                 }
             }
 
@@ -161,34 +197,39 @@ class AuthService {
 
             if (!result.success) {
                 return {
-                    success: false
+                    success: false,
+                    reason: "Error while getting email verification"
                 }
             }
 
-            let { emailVerificationToken } = result;
+            // console.log(" result.data from email validation ", result.data)
+            let { emailVerificationToken, role } = result.data;
 
             if (emailVerificationToken.trim() !== emailStringHashed.trim()) {
                 return {
-                    success: false
+                    success: false,
+                    reason: "Verification failed bc of tampered email string"
                 }
             }
 
-            let putUserIntoVerifiedResult = await authModelHandler.putUserIntoVerified(userId); 
+            let putUserIntoVerifiedResult = await authModelHandler.putUserIntoVerified(userId);
 
             if (!putUserIntoVerifiedResult.success) {
                 return {
-                    success: false
-                } 
+                    success: false,
+                    reason: "Error while putting users into verified"
+                }
             }
 
 
             // then generate access and refresh tokens
-            let { accessToken } = tokenGenerationServiceHandler.accessTokenGenerator(userId);
-            let refreshTokenResult = await tokenGenerationServiceHandler.refreshTokenGenerator(userId);
+            let { accessToken } = tokenGenerationServiceHandler.accessTokenGenerator({ userId, role });
+            let refreshTokenResult = await tokenGenerationServiceHandler.refreshTokenGenerator({ userId, role });
 
             if (!refreshTokenResult.success) {
                 return {
-                    success: false
+                    success: false,
+                    reason: "Error while generating refresh token"
                 }
             }
 
@@ -220,7 +261,8 @@ class AuthService {
 
             if (!result.success) {
                 return {
-                    success: false
+                    success: false,
+                    reason: "Error while updating info in pending users resend sms"
                 }
             };
 
@@ -229,7 +271,8 @@ class AuthService {
 
             if (!res.success) {
                 return {
-                    success: false
+                    success: false,
+                    reason: "Sms sending problem"
                 }
             };
 
@@ -257,7 +300,8 @@ class AuthService {
 
             if (!result.success) {
                 return {
-                    success: false
+                    success: false,
+                    reason: "Error while updating info in pending users resend email"
                 }
             };
 
@@ -270,7 +314,8 @@ class AuthService {
 
             if (!res.success) {
                 return {
-                    success: false
+                    success: false,
+                    reason: "Email sending problem"
                 }
             };
 
@@ -288,10 +333,10 @@ class AuthService {
 
     async logInWithPhone(sentInfo) {
         try {
-            let { phone, password, deviceIdentifier } = sentInfo;
+            let { phone, password } = sentInfo;
             // we need to update deviceIdentifier too
 
-            let result = await authModelHandler.logInPhone({ phone, deviceIdentifier });
+            let result = await authModelHandler.logInPhone({ phone });
 
             if (!result.success) {
                 return {
@@ -299,25 +344,27 @@ class AuthService {
                 }
             }
 
-            let { password_hashed, id } = result.data;
+            let { password_hashed, id, userrole } = result.data;
 
             let matched = await bcryptCompare(password, password_hashed);
 
 
             if (!matched) {
                 return {
-                    success: false
+                    success: false,
+                    reason: "Password mismatch"
                 }
             }
 
             // generate tokens
             // then generate access and refresh tokens
-            let { accessToken } = tokenGenerationServiceHandler.accessTokenGenerator(id);
-            let refreshTokenResult = await tokenGenerationServiceHandler.refreshTokenGenerator(id);
+            let { accessToken } = tokenGenerationServiceHandler.accessTokenGenerator({ userId: id, role: userrole });
+            let refreshTokenResult = await tokenGenerationServiceHandler.refreshTokenGenerator({ userId: id, role: userrole });
 
             if (!refreshTokenResult.success) {
                 return {
-                    success: false
+                    success: false,
+                    reason: "Error while generating refresh token"
                 }
             }
 
@@ -339,36 +386,40 @@ class AuthService {
 
     async logInWithEmail(sentInfo) {
         try {
-            let { email, password, deviceIdentifier } = sentInfo;
+            let { email, password } = sentInfo;
             // we need to update deviceIdentifier too
 
-            let result = await authModelHandler.logInEmail({ email, deviceIdentifier });
+            let result = await authModelHandler.logInEmail({ email });
 
             if (!result.success) {
                 return {
-                    success: false
+                    success: false,
+                    reason: "User doesn't exist"
                 }
             }
 
-            let { password_hashed, id } = result.data;
+            let { password_hashed, id, userrole } = result.data;
+            console.log(" { password_hashed, id } ", { password_hashed, id })
 
             let matched = await bcryptCompare(password, password_hashed);
 
 
             if (!matched) {
                 return {
-                    success: false
+                    success: false,
+                    reason: "Password mismatch"
                 }
             }
 
             // generate tokens
             // then generate access and refresh tokens
-            let { accessToken } = tokenGenerationServiceHandler.accessTokenGenerator(id);
-            let refreshTokenResult = await tokenGenerationServiceHandler.refreshTokenGenerator(id);
+            let { accessToken } = tokenGenerationServiceHandler.accessTokenGenerator({ userId: id, role: userrole });
+            let refreshTokenResult = await tokenGenerationServiceHandler.refreshTokenGenerator({ userId: id, role: userrole });
 
             if (!refreshTokenResult.success) {
                 return {
-                    success: false
+                    success: false,
+                    reason: "Error while generating refresh token"
                 }
             }
 
@@ -393,13 +444,14 @@ class AuthService {
         try {
             // log out is related to token invalidation. 
             // so refresh token will be sent
-            let {  randomString } = sentInfo;
+            let { randomString } = sentInfo;
 
             let res = await tokenGenerationServiceHandler.invalidateRefreshToken({ randomString });
 
             if (!res.success) {
                 return {
-                    success: false
+                    success: false,
+                    reason: "Error while invalidating refresh token"
                 }
             }
 
