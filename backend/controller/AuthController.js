@@ -1,5 +1,6 @@
 const SignUpServiceHandler = require('../service/AuthService');
 const dotenv = require('dotenv');
+
 const path = require('path');   
 
 dotenv.config({
@@ -52,6 +53,8 @@ class AuthController {
     //     }
     // }
 
+
+    // send the access and ref token through the redirect
     async validateEmail(req, res) {
         try {
             console.log("Received validateEmail request with params: ", req.validatedParams);
