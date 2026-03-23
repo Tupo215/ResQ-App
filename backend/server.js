@@ -56,25 +56,6 @@ app.get('/health', (req, res) => {
     });
 });
 
-// 404 handler for undefined routes
-app.use('*', (req, res) => {
-    console.log('404 - Route not found:', req.method, req.originalUrl);
-    res.status(404).json({ 
-        error: 'Not Found',
-        message: `Route ${req.method} ${req.originalUrl} not found`,
-        availableRoutes: [
-            'GET /health',
-            'POST /auth/sign-up',
-            'POST /auth/log-in',
-            'GET /auth/verify-email',
-            'POST /auth/resend-verification',
-            'POST /auth/log-out',
-            'GET /auth/resend-verification',
-            'POST /profile/create-my-profile',
-            'GET /profile/get-my-profile'
-        ]
-    });
-});
 
 
 
