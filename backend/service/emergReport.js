@@ -183,6 +183,8 @@ class User {
                 // and we also put in the reason for severity to be number of ppl + health state
 
                 let puttingIntoTable = await this.putIntoTable({ severity, userId, latitude, longitude });
+
+                console.log("Result of putting into Table " , puttingIntoTable);
                 if (puttingIntoTable.success) {
                     return {
                         success: true,
