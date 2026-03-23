@@ -69,6 +69,8 @@ class AuthController {
                 const deepLink = `resqme://verification-success?accessToken=${accessToken}&refreshToken=${refreshToken}`;
                 // the actual thing
 
+                console.log("This is the deeplink");
+                console.log("The sign up is validated");
 
 
                 return res.render('successRedirect' , {deepLink});
