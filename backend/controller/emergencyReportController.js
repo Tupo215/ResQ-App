@@ -13,6 +13,9 @@ class ReportHandler {
 
             let result = await reporterObj.makeRequest({ userId, latitude, longitude, audioBuffer, reportingFor, victimsCount, victimCondition });
 
+            console.log("Result of reporting your accident "  , result);
+
+
             if (result.success) {
                 return res.status(200).json({
                     message: "Successful request"
@@ -23,6 +26,8 @@ class ReportHandler {
 
         } catch (err) {
             console.log("Error while reportNow ", err.message);
+            console.log("Result of reporting your accident "  , result);
+
             return {
                 success: false,
                 reason: "Error while reportNow "
