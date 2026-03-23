@@ -21,6 +21,11 @@ dotenv.config({
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// setting an engine for rendering
+app.set('view engine', 'ejs');
+
+app.set('views', path.join(__dirname, 'views'));
+
 // Middleware
 app.use(cors({
     origin: ['http://localhost:3000', 'https://resq-app-741m.onrender.com'],
