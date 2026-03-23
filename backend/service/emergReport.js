@@ -114,12 +114,22 @@ class ServiceProvider {
 }
 
 class User {
+    // two ways of reproting an accident
+    // one - voice
+    // two - selecting bunch of things 
+
     async makeRequest(sentInfo) {
         try {
-            let { userId, latitude, longitude, audioBuffer } = sentInfo;
+            let { userId, latitude, longitude,
+                audioBuffer, reportingFor, victimsCount,
+                victimCondition } = sentInfo;
+
+            //  send the victim condition and the VictimsCount .. in the email made for the service providers
+
 
             // first transcribe
             if (audioBuffer) {
+                // then this means they are reporting for themselves
                 console.log("Audio buffer received, starting transcription...", audioBuffer);
 
                 let sentToAI = await this.sendToAI({ audioBuffer, userId });
@@ -162,7 +172,16 @@ class User {
                 }
             } else {
                 // if there is no audio immediately make the report
-                let puttingIntoTable = await this.putIntoTable({ severity: 'medium', userId, latitude, longitude });
+                // maybe they are reporting for someone else too
+                // so we see the victim condition and number to decide the criticality ourselves
+                let severity = medium;
+                if (victimsCount >= 3 || victimCondition.toLowerCase() == "unconscious") {
+                    severity = high;
+                }
+
+                // and we also put in the reason for severity to be number of ppl + health state
+
+                let puttingIntoTable = await this.putIntoTable({ severity, userId, latitude, longitude });
                 if (puttingIntoTable.success) {
                     return {
                         success: true,
@@ -172,8 +191,8 @@ class User {
                 }
 
                 return {
-                    success : false,
-                    reason : "Error while putting info into a report table"
+                    success: false,
+                    reason: "Error while putting info into a report table"
                 }
 
             }
@@ -302,6 +321,8 @@ class User {
                     reason: "Error while emergencyReportMaker.createAReport"
                 }
             }
+            // I need to make some secure storage
+        
 
 
             // check if ranked severity is low -> then display messages to the user

@@ -9,9 +9,9 @@ class ReportHandler {
             // console.log("Received reportNow request with body: ", req.file);
             let audioBuffer = req.file.buffer;
             let userId = req.decodedAccess.userId;
-            let { latitude, longitude } = req.body;
+            let {  latitude, longitude,  reportingFor, victimsCount, victimCondition } = req.body;
 
-            let result = await reporterObj.makeRequest({ userId, latitude, longitude, audioBuffer });
+            let result = await reporterObj.makeRequest({ userId, latitude, longitude, audioBuffer, reportingFor, victimsCount, victimCondition });
 
             if (result.success) {
                 return res.status(200).json({
