@@ -175,9 +175,9 @@ class User {
                 // if there is no audio immediately make the report
                 // maybe they are reporting for someone else too
                 // so we see the victim condition and number to decide the criticality ourselves
-                let severity = medium;
+                let severity = "medium";
                 if (victimsCount >= 3 || victimCondition.toLowerCase() == "unconscious") {
-                    severity = high;
+                    severity = "high";
                 }
 
                 // and we also put in the reason for severity to be number of ppl + health state
