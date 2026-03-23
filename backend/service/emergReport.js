@@ -192,8 +192,7 @@ class User {
                 if (puttingIntoTable.success) {
                     return {
                         success: true,
-                        message: "A service provider will be contacted Immediately",
-                        firstAid: first_aid_steps
+                        message: "A service provider will be contacted Immediately"
                     }
                 }
 
