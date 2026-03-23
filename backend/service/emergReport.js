@@ -145,6 +145,7 @@ class User {
 
                 // see the ai thing
                 let { severity, first_aid_steps } = sentToAI.data;
+                console.log("AI sent result " , { severity, first_aid_steps } );
 
 
                 let puttingIntoTable = await this.putIntoTable({ severity, userId, latitude, longitude });
