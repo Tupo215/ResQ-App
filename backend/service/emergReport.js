@@ -124,6 +124,10 @@ class User {
                 audioBuffer, reportingFor, victimsCount,
                 victimCondition } = sentInfo;
 
+            console.log("Sent Info is " , { userId, latitude, longitude,
+                audioBuffer, reportingFor, victimsCount,
+                victimCondition });
+
             //  send the victim condition and the VictimsCount .. in the email made for the service providers
 
 
