@@ -155,7 +155,8 @@ class ProfileController {
     async userProfile(req, res) {
         try {
             let { userId } = req.decodedAccess;
-            let profile = req.files?.profilePic[0].buffer;
+            // let profile = req.files?.profilePic[0].buffer;
+            let profile=undefined;
             // let frontBuffer = req.files.front[0].buffer;
             // let backBuffer = req.files.back[0].buffer;
             
