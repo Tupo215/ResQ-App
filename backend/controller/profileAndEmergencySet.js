@@ -188,6 +188,8 @@ class ProfileController {
                 return res.status(201).json({ message: "Successfully created profile" });
             }
 
+            console.log("Reason for Bad request " , result);
+
             return res.status(400).json({ 
                 success: false,
                 message: 'Bad Request',
