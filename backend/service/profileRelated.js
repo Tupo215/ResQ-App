@@ -147,6 +147,44 @@ class EmergencyContactPpSetUpAndUpdate {
 
 
 class UserPpSetUpAndUpdate {
+    
+    // Helper method to parse mobile app data properly
+    parseMobileAppData(data, expectedType) {
+        console.log(`Parsing ${expectedType} data:`, data);
+        
+        // Handle null/undefined
+        if (!data || data === 'undefined' || data === 'null' || data === '') {
+            return expectedType === 'array' ? '[]' : '{}';
+        }
+        
+        // If already a string (from mobile app), validate and return
+        if (typeof data === 'string') {
+            try {
+                // Try to parse to validate it's valid JSON
+                const parsed = JSON.parse(data);
+                return data; // Return original string if valid
+            } catch (e) {
+                console.log(`Invalid ${expectedType} JSON from mobile app:`, data);
+                // Return default structure for invalid JSON
+                return expectedType === 'array' ? '[]' : '{}';
+            }
+        }
+        
+        // If it's an object/array, stringify it
+        if (typeof data === 'object') {
+            try {
+                return JSON.stringify(data);
+            } catch (e) {
+                console.log(`Error stringifying ${expectedType}:`, e.message);
+                return expectedType === 'array' ? '[]' : '{}';
+            }
+        }
+        
+        // Fallback for other types
+        console.log(`Unexpected data type for ${expectedType}:`, typeof data);
+        return expectedType === 'array' ? '[]' : '{}';
+    }
+    
     // create
     async userProfile(sentInfo) {
         try {
@@ -184,8 +222,8 @@ class UserPpSetUpAndUpdate {
 
 
 
-            // allergies = JSON.stringify(allergies);
-            // healthState = JSON.stringify(healthState);
+            allergies = this.parseMobileAppData(allergies, 'array');
+            healthState = this.parseMobileAppData(healthState, 'object');
             // the image url will be converted here
 
 

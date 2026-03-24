@@ -194,18 +194,49 @@ class UserRelated {
             let { userId, gender, allergies, healthState, profileUrl } = sentInfo;
             // , HmoEnrollId, HmoCoveragePlan, CompanyName, HmoId,idPicPath 
 
-
             console.log("userProfile in model")
+            console.log("Received data:", { userId, gender, allergies, healthState, profileUrl });
+            
+            // Validate required fields
+            if (!userId) {
+                return {
+                    success: false,
+                    reason: "User ID is required"
+                }
+            }
+            
+            // Handle allergies and healthState - ensure they are valid JSON or null
+            let allergiesJson = null;
+            let healthStateJson = null;
+            
+            if (allergies && allergies !== 'undefined' && allergies !== 'null') {
+                try {
+                    allergiesJson = typeof allergies === 'string' ? allergies : JSON.stringify(allergies);
+                } catch (e) {
+                    console.log("Error parsing allergies:", e.message);
+                    allergiesJson = '[]'; // Default to empty array
+                }
+            }
+            
+            if (healthState && healthState !== 'undefined' && healthState !== 'null') {
+                try {
+                    healthStateJson = typeof healthState === 'string' ? healthState : JSON.stringify(healthState);
+                } catch (e) {
+                    console.log("Error parsing healthState:", e.message);
+                    healthStateJson = '{}'; // Default to empty object
+                }
+            }
+            
             let query = `
                 INSERT INTO user_profile(user_id ,gender ,allergies,health_state , profile)
-                VALUES ($1 , $2 , $3 , $4 ,$5 )
+                VALUES ($1 , $2 , $3::jsonb , $4::jsonb ,$5 )
                 RETURNING id
             `;
 
             // ,Hmo_enroll_id ,Hmo_plan  ,Company_name ,HMO_info , id_picture_path ,
-            let values = [userId, gender, allergies, healthState, profileUrl];
+            let values = [userId, gender, allergiesJson, healthStateJson, profileUrl];
 
-            console.log("Values for the values ", values)
+            console.log("Final values for database:", values)
             let result = await pool.query(query, values);
 
             console.log("Result from database is " , result.rows);
@@ -213,19 +244,21 @@ class UserRelated {
             if (result.rowCount === 0) {
                 return {
                     success: false,
-                    reason: "Insertion profile failed"
+                    reason: "Insertion profile failed - no rows inserted"
                 }
             }
 
             return {
-                success: true
+                success: true,
+                data: result.rows[0]
             }
 
         } catch (err) {
             console.log("Error while UserProfileSetModel.profileSetUp ", err.message);
+            console.log("Error details:", err);
             return {
                 success: false,
-                reason: "Database insert problem"
+                reason: "Database insert problem: " + err.message
             }
         }
     }
