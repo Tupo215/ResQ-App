@@ -156,7 +156,7 @@ class UserPpSetUpAndUpdate {
             // // , frontBuffer, backBuffer
             //  HmoEnrollId, HmoCoveragePlan, CompanyName, HmoName,
             // frontUrl - for now will be the profile of the user
-            let profileUrl = 'ppUrl';
+            let profileUrl = null;
             if (profile){
                 profileUrl = await uploadFilesToCloud({ buffer: profile, folder: "User-Profile-storage" }) 
             }
