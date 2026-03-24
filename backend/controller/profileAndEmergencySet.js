@@ -155,17 +155,24 @@ class ProfileController {
     async userProfile(req, res) {
         try {
             let { userId } = req.decodedAccess;
-            // let profile = req.files?.profilePic[0].buffer;
-            let profile=undefined;
+            
+            // Safely extract profile picture buffer
+            let profile = null;
+            if (req.files && req.files.profilePic && req.files.profilePic.length > 0) {
+                profile = req.files.profilePic[0].buffer;
+            }
+            
             // let frontBuffer = req.files.front[0].buffer;
             // let backBuffer = req.files.back[0].buffer;
-            
 
             let { gender, allergies, healthState } = req.body;
             // HmoEnrollId, HmoCoveragePlan, CompanyName, HmoName
 
 
             console.log("userProfile in controller")
+            console.log("Files received:", req.files ? "Yes" : "No");
+            console.log("Profile picture:", profile ? "Present" : "Not provided");
+            
             let result = await fetchAndUpdateUserHandler.userProfile({
                 userId,
                 gender,
@@ -178,14 +185,23 @@ class ProfileController {
             // // HmoEnrollId, HmoCoveragePlan, CompanyName, HmoName,// frontBuffer, backBuffer
 
             if (result.success) {
-                return res.status(201).json({ message: "Successfuly created profile" });
+                return res.status(201).json({ message: "Successfully created profile" });
             }
 
-            return res.status(400).json({ message: 'Bad Request' })
+            return res.status(400).json({ 
+                success: false,
+                message: 'Bad Request',
+                reason: result.reason || 'Profile creation failed'
+            })
 
         } catch (error) {
             console.log("Error while ProfileCreateController.userProfile ", error.message);
-            return res.status(500).json({ message: 'Internal Server error' });
+            console.log("Error stack:", error.stack);
+            return res.status(500).json({ 
+                success: false,
+                message: 'Internal Server error',
+                reason: error.message 
+            });
         }
     }
 
