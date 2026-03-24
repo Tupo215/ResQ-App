@@ -192,10 +192,11 @@ class UserRelated {
     async profileSetUp(sentInfo) {
         try {
             let { userId, gender, allergies, healthState, profileUrl } = sentInfo;
-            // , HmoEnrollId, HmoCoveragePlan, CompanyName, HmoId,idPicPath 
+            // Map profileUrl to id_picture_path for database
+            let id_picture_path = profileUrl; // This will be null if no profile picture
 
             console.log("userProfile in model")
-            console.log("Received data:", { userId, gender, allergies, healthState, profileUrl });
+            console.log("Received data:", { userId, gender, allergies, healthState, id_picture_path });
             
             // Validate required fields
             if (!userId) {
@@ -234,7 +235,7 @@ class UserRelated {
             `;
 
             // ,Hmo_enroll_id ,Hmo_plan  ,Company_name ,HMO_info , id_picture_path ,
-            let values = [userId, gender, allergiesJson, healthStateJson, profileUrl];
+            let values = [userId, gender, allergiesJson, healthStateJson, id_picture_path];
 
             console.log("Final values for database:", values)
             let result = await pool.query(query, values);
