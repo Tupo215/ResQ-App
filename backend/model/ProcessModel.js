@@ -208,6 +208,8 @@ class UserRelated {
             console.log("Values for the values ", values)
             let result = await pool.query(query, values);
 
+            console.log("Result from database is " , result.rows);
+
             if (result.rowCount === 0) {
                 return {
                     success: false,
