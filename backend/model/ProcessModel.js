@@ -228,7 +228,7 @@ class UserRelated {
             }
             
             let query = `
-                INSERT INTO user_profile(user_id ,gender ,allergies,health_state , profile)
+                INSERT INTO user_profile(user_id ,gender ,allergies,health_state , id_picture_path)
                 VALUES ($1 , $2 , $3::jsonb , $4::jsonb ,$5 )
                 RETURNING id
             `;
