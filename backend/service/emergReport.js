@@ -139,16 +139,21 @@ class User {
                 let sentToAI = await this.sendToAI({ audioBuffer, userId });
 
                 if (!sentToAI.success) {
-                    return {
-                        success: false,
-                        reason: "Error while sending to ai microservice"
-                    }
+                    console.log("Error while AI sending info");
+                    // return {
+                    //     success: false,
+                    //     reason: "Error while sending to ai microservice"
+                    // }
                 }
 
                 // {"severity" : "Critical","priority_level"1,"recommended_action""Senhelimmediately","first_aid_steps"["Checfovisiblinjuries","Cleasmalwoundipossible","Keethvicticomfortable.","Monitofodizziness","Stawitthvictim"]
 
                 // see the ai thing
-                let { severity, first_aid_steps } = sentToAI.data;
+                let severity = "medium";
+                if (sentToAI.data){
+                    severity = sentToAI.data.severity;
+                }
+                
                 console.log("AI sent result " , { severity, first_aid_steps } );
 
 
