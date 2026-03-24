@@ -198,7 +198,7 @@ class UserRelated {
             console.log("userProfile in model")
             let query = `
                 INSERT INTO user_profile(user_id ,gender ,allergies,health_state , profile)
-                VALUES ($1 , $2 , $3::jsonb , $4::jsonb ,$5 )
+                VALUES ($1 , $2 , $3 , $4 ,$5 )
                 RETURNING id
             `;
 

@@ -184,8 +184,8 @@ class UserPpSetUpAndUpdate {
 
 
 
-            allergies = JSON.stringify(allergies);
-            healthState = JSON.stringify(healthState);
+            // allergies = JSON.stringify(allergies);
+            // healthState = JSON.stringify(healthState);
             // the image url will be converted here
 
 
