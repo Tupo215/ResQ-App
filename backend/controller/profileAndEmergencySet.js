@@ -158,6 +158,7 @@ class ProfileController {
             let profile = req.files?.profilePic[0].buffer;
             // let frontBuffer = req.files.front[0].buffer;
             // let backBuffer = req.files.back[0].buffer;
+            
 
             let { gender, allergies, healthState } = req.body;
             // HmoEnrollId, HmoCoveragePlan, CompanyName, HmoName
