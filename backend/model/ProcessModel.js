@@ -603,6 +603,8 @@ class ReportRelated {
 
             let result = await pool.query(query, values);
 
+            console.log("Result from the database is " ,  result); 
+
             if (result.rowCount === 0) {
                 return {
                     success: false,
